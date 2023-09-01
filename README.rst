@@ -25,6 +25,10 @@ CLI tool to view the MPs that you have reviewed for a given launchpad project.
 Usage
 -----
 
+Find the Merge Proposals that launchpad.net user philroche proposed for the lp:livecd-rootfs.::
+
+    cli.py --proposer-launchpad-username philroche --launchpad-git-repo lp:livecd-rootfs
+
 Find the Merge Proposals that launchpad.net user philroche has reviewed for the lp:livecd-rootfs.::
 
     cli.py --reviewer-launchpad-username philroche --launchpad-git-repo lp:livecd-rootfs
@@ -32,6 +36,7 @@ Find the Merge Proposals that launchpad.net user philroche has reviewed for the 
 Find the Merge Proposals that launchpad.net user philroche has proposed and has also self reviewed for the lp:livecd-rootfs.::
 
     cli.py --reviewer-launchpad-username philroche --proposer-launchpad-username philroche --launchpad-git-repo lp:livecd-rootfs
+
 
 Features
 --------

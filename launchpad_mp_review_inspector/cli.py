@@ -7,7 +7,7 @@ import launchpadagent
 from launchpad_mp_review_inspector import get_mp_summary
 
 @click.command()
-@click.option('--reviewer-launchpad-username', envvar='REVIEWER_LAUNCHPAD_USERNAME', required=True,
+@click.option('--reviewer-launchpad-username', envvar='REVIEWER_LAUNCHPAD_USERNAME', required=False,
               help="Your launchpad username of the merge proposal review."
                    "You can also set REVIEWER_LAUNCHPAD_USERNAME as an environment "
                    "variable.", default=None)
@@ -25,9 +25,11 @@ from launchpad_mp_review_inspector import get_mp_summary
                    "credentials store.", default=None)
 def main(reviewer_launchpad_username, proposer_launchpad_username, launchpad_git_repos, lp_credentials_store):
     """Console script for launchpad_mp_review_inspector."""
-    click.echo("Retrieving merge proposals with reviewer {0} in {1}".format(reviewer_launchpad_username, launchpad_git_repos))
+    click.echo("Retrieving merge proposals in {}".format(launchpad_git_repos))
+    if reviewer_launchpad_username:
+        click.echo("Filtered by merge proposal reviewer {}".format(reviewer_launchpad_username))
     if proposer_launchpad_username:
-        click.echo("Filtered by merge proposal proposer {0}".format(proposer_launchpad_username))
+        click.echo("Filtered by merge proposal proposer {}".format(proposer_launchpad_username))
     launchpad_cachedir = os.path.join('/tmp/launchpad_mp_review_inspector/.launchpadlib')
     lp = launchpadagent.get_launchpad(
         launchpadlib_dir=launchpad_cachedir,
@@ -39,15 +41,23 @@ def main(reviewer_launchpad_username, proposer_launchpad_username, launchpad_git
         for merge_proposal in merge_proposals:
             _, merge_proposal_owner = merge_proposal.registrant_link.split('~')
             if not proposer_launchpad_username or (proposer_launchpad_username and merge_proposal_owner.lower() == proposer_launchpad_username.lower()):
-                for vote in merge_proposal.votes:
-                    owner = vote.reviewer.name
-                    if owner.lower() == reviewer_launchpad_username.lower() and hasattr(vote.comment, 'vote'):
-                        target_source, summary = get_mp_summary(merge_proposal)
-                        print(merge_proposal.web_link)
-                        print("\t[{}] - {}".format(merge_proposal.date_created, target_source))
-                        print("\t\t{}".format(summary))
-                        print("\t\t{}".format(merge_proposal.queue_status))
-                        print("\t\t{} {}".format(owner, vote.comment.vote))
+                if reviewer_launchpad_username:
+                    for vote in merge_proposal.votes:
+                        owner = vote.reviewer.name
+                        if owner.lower() == reviewer_launchpad_username.lower() and hasattr(vote.comment, 'vote'):
+                            target_source, summary = get_mp_summary(merge_proposal)
+                            print(merge_proposal.web_link)
+                            print("\t[{}] - {}".format(merge_proposal.date_created, target_source))
+                            print("\t\t{}".format(summary))
+                            print("\t\t{}".format(merge_proposal.queue_status))
+                            print("\t\t{} {}".format(owner, vote.comment.vote))
+                else:
+                    # we're not filtering on the reviewer so just print all MPs in list
+                    target_source, summary = get_mp_summary(merge_proposal)
+                    print(merge_proposal.web_link)
+                    print("\t[{}] - {}".format(merge_proposal.date_created, target_source))
+                    print("\t\t{}".format(summary))
+                    print("\t\t{}".format(merge_proposal.queue_status))
     return 0
 
 
