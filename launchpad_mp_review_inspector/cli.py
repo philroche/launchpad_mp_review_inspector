@@ -7,9 +7,13 @@ import launchpadagent
 from launchpad_mp_review_inspector import get_mp_summary
 
 @click.command()
-@click.option('--launchpad-username', envvar='LAUNCHPAD_USERNAME', required=True,
-              help="Your launchpad username."
-                   "You can also set LAUNCHPAD_USERNAME as an environment "
+@click.option('--reviewer-launchpad-username', envvar='REVIEWER_LAUNCHPAD_USERNAME', required=True,
+              help="Your launchpad username of the merge proposal review."
+                   "You can also set REVIEWER_LAUNCHPAD_USERNAME as an environment "
+                   "variable.", default=None)
+@click.option('--proposer-launchpad-username', envvar='PROPOSER_LAUNCHPAD_USERNAME', required=False,
+              help="Your launchpad username of the merge proposal proposer."
+                   "You can also set PROPOSER_LAUNCHPAD_USERNAME as an environment "
                    "variable.", default=None)
 @click.option('--launchpad-git-repo', 'launchpad_git_repos',  envvar='LAUNCHPAD_GIT_REPOS', required=True,
               help="Your launchpad git repo."
@@ -19,9 +23,11 @@ from launchpad_mp_review_inspector import get_mp_summary
               required=False,
               help="An optional path to an already configured launchpad "
                    "credentials store.", default=None)
-def main(launchpad_username, launchpad_git_repos, lp_credentials_store):
+def main(reviewer_launchpad_username, proposer_launchpad_username, launchpad_git_repos, lp_credentials_store):
     """Console script for launchpad_mp_review_inspector."""
-    click.echo("Retrieving merge proposals for {0} in {1}".format(launchpad_username, launchpad_git_repos))
+    click.echo("Retrieving merge proposals with reviewer {0} in {1}".format(reviewer_launchpad_username, launchpad_git_repos))
+    if proposer_launchpad_username:
+        click.echo("Filtered by merge proposal proposer {0}".format(proposer_launchpad_username))
     launchpad_cachedir = os.path.join('/tmp/launchpad_mp_review_inspector/.launchpadlib')
     lp = launchpadagent.get_launchpad(
         launchpadlib_dir=launchpad_cachedir,
@@ -31,15 +37,17 @@ def main(launchpad_username, launchpad_git_repos, lp_credentials_store):
         repo = lp.git_repositories.getByPath(path=source_repo.replace('lp:', ''))
         merge_proposals = repo.getMergeProposals(status=['Needs review', 'Merged', 'Approved', 'Rejected', 'Work in progress', 'Superseded', 'Queued'])
         for merge_proposal in merge_proposals:
-            for vote in merge_proposal.votes:
-                owner = vote.reviewer.name
-                if owner == launchpad_username and hasattr(vote.comment, 'vote'):
-                    target_source, summary = get_mp_summary(merge_proposal)
-                    print(merge_proposal.web_link)
-                    print("\t[{}] - {}".format(merge_proposal.date_created, target_source))
-                    print("\t\t{}".format(summary))
-                    print("\t\t{}".format(merge_proposal.queue_status))
-                    print("\t\t{} {}".format(owner, vote.comment.vote))
+            _, merge_proposal_owner = merge_proposal.registrant_link.split('~')
+            if not proposer_launchpad_username or (proposer_launchpad_username and merge_proposal_owner.lower() == proposer_launchpad_username.lower()):
+                for vote in merge_proposal.votes:
+                    owner = vote.reviewer.name
+                    if owner.lower() == reviewer_launchpad_username.lower() and hasattr(vote.comment, 'vote'):
+                        target_source, summary = get_mp_summary(merge_proposal)
+                        print(merge_proposal.web_link)
+                        print("\t[{}] - {}".format(merge_proposal.date_created, target_source))
+                        print("\t\t{}".format(summary))
+                        print("\t\t{}".format(merge_proposal.queue_status))
+                        print("\t\t{} {}".format(owner, vote.comment.vote))
     return 0
 
 
