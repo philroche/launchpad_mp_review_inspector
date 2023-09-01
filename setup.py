@@ -28,7 +28,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    description="CLI tool to view the MPs that you have reviews for a given launchpad project.",
+    description="CLI tool to view the MPs that you have reviewed for a given launchpad project.",
     entry_points={
         'console_scripts': [
             'launchpad_mp_review_inspector=launchpad_mp_review_inspector.cli:main',

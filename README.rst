@@ -16,12 +16,22 @@ Merge proposal Review Inspector
 
 
 
-CLI tool to view the MPs that you have reviews for a given launchpad project.
+CLI tool to view the MPs that you have reviewed for a given launchpad project.
 
 
 * Free software: GNU General Public License v3
 * Documentation: https://launchpad-mp-review-inspector.readthedocs.io.
 
+Usage
+-----
+
+Find the Merge Proposals that launchpad.net user philroche has reviewed for the lp:livecd-rootfs.::
+
+    cli.py --reviewer-launchpad-username philroche --launchpad-git-repo lp:livecd-rootfs
+
+Find the Merge Proposals that launchpad.net user philroche has proposed and has also self reviewed for the lp:livecd-rootfs.::
+
+    cli.py --reviewer-launchpad-username philroche --proposer-launchpad-username philroche --launchpad-git-repo lp:livecd-rootfs
 
 Features
 --------
